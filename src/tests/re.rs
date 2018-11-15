@@ -1,6 +1,4 @@
-use crate::reg::{cat::Cat, re::Re};
-
-impl Cat for char {} // TODO: use an actual Cat implementation
+use crate::reg::re::Re;
 
 #[test]
 fn cat_all() {
@@ -78,7 +76,7 @@ fn test_disp() {
     })
   );
 
-  // assert_eq!();
+  // assert_eq!(); // TODO: test the other variants
 
   // Test precedence
   assert_eq!(

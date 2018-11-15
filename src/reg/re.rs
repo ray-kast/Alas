@@ -1,4 +1,8 @@
-use std::fmt::{self, Display, Formatter};
+use super::nfa::builder::NfaBuilder;
+use std::{
+  fmt::{self, Display, Formatter},
+  hash::Hash,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Re<T> {
@@ -98,6 +102,11 @@ impl<T: Clone> Re<T> {
       },
     }
   }
+}
+
+impl<T: Hash + Eq> Re<T> {
+  #[inline]
+  pub fn build_nfa(self) -> NfaBuilder<T> { self.into() }
 }
 
 impl<T: Display> Re<T> {
