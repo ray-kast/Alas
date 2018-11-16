@@ -21,9 +21,3 @@ fn nfa() {
   // TODO: figure out how to test properties of the NFA
   let _ = gen_re_1().build_nfa().build();
 }
-
-#[test]
-fn compact() {
-  // TODO: figure out how to test properties of the NFA
-  let _ = gen_re_1().build_nfa().build().compact();
-}

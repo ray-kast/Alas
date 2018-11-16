@@ -1,7 +1,6 @@
 use super::{
   super::prelude::*,
   builder::{NfaBuilder, NfaNodeRef},
-  compact::CompactNfa,
 };
 use std::{
   collections::{HashMap, HashSet},
@@ -12,11 +11,6 @@ pub struct Nfa<T, S> {
   states: HashMap<S, HashMap<Option<T>, HashSet<S>>>,
   head: S,
   tail: S,
-}
-
-impl<T, S> Nfa<T, S> {
-  #[inline]
-  pub fn compact(self) -> CompactNfa<T, S> { self.into() }
 }
 
 impl<T: Hash + Eq> From<NfaBuilder<T>> for Nfa<T, usize> {
