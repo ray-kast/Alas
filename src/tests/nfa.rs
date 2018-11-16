@@ -1,7 +1,4 @@
-use crate::reg::{
-  nfa::{builder::NfaBuilder, Nfa},
-  re::Re,
-};
+use crate::reg::re::Re;
 
 fn gen_re_1() -> Re<char> {
   Re::alt(
@@ -12,12 +9,14 @@ fn gen_re_1() -> Re<char> {
 
 #[test]
 fn builder() {
-  // TODO: figure out how to test properties of the graph
+  // Just make sure it doesn't panic.
+  // I can test properties of the graph with great difficulty, but I'd rather not
+  // if it's not necessary
   let _ = gen_re_1().build_nfa();
 }
 
 #[test]
 fn nfa() {
-  // TODO: figure out how to test properties of the NFA
+  // Just make sure it doesn't panic. (see comments on the builder tests)
   let _ = gen_re_1().build_nfa().build();
 }

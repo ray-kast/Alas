@@ -3,8 +3,9 @@ use std::{
   borrow::Cow,
   cell::RefCell,
   collections::{HashMap, HashSet},
-  fmt::{self, Debug, Write},
+  fmt::{self, Debug, Formatter, Write},
   hash::{Hash, Hasher},
+  mem,
   rc::{Rc, Weak},
 };
 
@@ -19,6 +20,15 @@ pub struct NfaNode<T> {
 }
 
 pub struct NfaNodeRef<T>(Weak<NfaNode<T>>);
+
+impl<T> NfaBuilder<T> {
+  // returns (nodes, head, tail)
+  pub fn into_parts(
+    self,
+  ) -> (Vec<Rc<NfaNode<T>>>, NfaNodeRef<T>, NfaNodeRef<T>) {
+    (self.nodes, self.head, self.tail)
+  }
+}
 
 impl<T: Hash + Eq> NfaBuilder<T> {
   pub fn new() -> Self {
@@ -171,6 +181,14 @@ impl<T: Hash + Eq> NfaNode<T> {
       .or_insert(HashSet::new())
       .insert(to.into())
   }
+
+  pub fn take_outs(&self) -> HashMap<Option<T>, HashSet<NfaNodeRef<T>>> {
+    let mut ret = HashMap::new();
+
+    mem::swap(&mut ret, &mut *self.outs.borrow_mut());
+
+    ret
+  }
 }
 
 impl<T> NfaNodeRef<T> {
@@ -214,3 +232,24 @@ impl<T> PartialEq for NfaNodeRef<T> {
 }
 
 impl<T> Eq for NfaNodeRef<T> {}
+
+impl<T> Debug for NfaNodeRef<T> {
+  fn fmt(&self, state: &mut Formatter) -> fmt::Result {
+    state.write_str("NodeRef(")?;
+
+    match self.0.upgrade() {
+      Some(p) => {
+        let ptr = Rc::into_raw(p);
+
+        write!(state, "{:p}", ptr)?;
+
+        let _ = unsafe { Rc::from_raw(ptr) };
+      }
+      None => {state.write_str("dead")?;}
+    }
+
+    state.write_str(")")?;
+
+    Ok(())
+  }
+}
