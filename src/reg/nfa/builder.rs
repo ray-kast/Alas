@@ -124,29 +124,38 @@ impl<T: Hash + Eq> From<Re<T>> for NfaBuilder<T> {
 }
 
 impl<T: Hash + Eq + Debug> NfaBuilder<T> {
-  pub fn dot(&self, w: &mut Write) -> fmt::Result {
-    w.write_str("digraph{edge[arrowhead=normal,arrowtail=dot];")?;
+  pub fn dot(&self) -> Result<String, fmt::Error> {
+    let mut s = String::new();
+
+    s.write_str("digraph{edge[arrowhead=normal,arrowtail=dot];")?;
 
     let mut ids: HashMap<NfaNodeRef<T>, usize> = HashMap::new();
 
     for (i, node) in self.nodes.iter().enumerate() {
       ids.insert(node.into(), i);
 
-      // TODO: style head and tail nodes
+      // TODO: style head nodes
 
-      write!(w, "{:?};", i.to_string())?;
+      write!(s, "{:?}", i.to_string())?;
+
+      if NfaNodeRef::from(node) == self.tail {
+        s.write_str("[peripheries=2];")?;
+      } else {
+        s.write_str(";")?;
+      }
     }
 
     for (i, node) in self.nodes.iter().enumerate() {
+      let i_str = i.to_string();
+
       for (by, outs) in &*node.outs.borrow() {
-        let i_str = i.to_string();
         let by_str: Cow<str> = by
           .as_ref()
           .map_or("λ".into(), |b| format!("{:?}", b).into());
 
         for to in outs {
           write!(
-            w,
+            s,
             "{:?}->{:?}[label={:?}];",
             i_str,
             ids[to].to_string(),
@@ -156,9 +165,9 @@ impl<T: Hash + Eq + Debug> NfaBuilder<T> {
       }
     }
 
-    w.write_str("}")?;
+    s.write_str("}")?;
 
-    Ok(())
+    Ok(s)
   }
 }
 
@@ -244,8 +253,10 @@ impl<T> Debug for NfaNodeRef<T> {
         write!(state, "{:p}", ptr)?;
 
         let _ = unsafe { Rc::from_raw(ptr) };
-      }
-      None => {state.write_str("dead")?;}
+      },
+      None => {
+        state.write_str("dead")?;
+      },
     }
 
     state.write_str(")")?;

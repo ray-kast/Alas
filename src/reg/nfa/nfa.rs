@@ -1,24 +1,73 @@
 use super::{
-  super::prelude::*,
+  super::{dfa::Dfa, prelude::*},
   builder::{NfaBuilder, NfaNodeRef},
 };
 use std::{
-  collections::{HashMap, HashSet},
+  borrow::Cow,
+  collections::{BTreeSet, HashMap, HashSet},
+  fmt::{self, Debug, Write},
   hash::Hash,
 };
 
+pub type NfaTable<T, S> = HashMap<S, HashMap<Option<T>, HashSet<S>>>;
+
 pub struct Nfa<T, S> {
-  states: HashMap<S, HashMap<Option<T>, HashSet<S>>>,
+  states: NfaTable<T, S>,
   head: S,
   tail: S,
 }
 
 impl<T, S> Nfa<T, S> {
   // returns (states, head, tail)
-  pub fn into_parts(
-    self,
-  ) -> (HashMap<S, HashMap<Option<T>, HashSet<S>>>, S, S) {
+  pub fn into_parts(self) -> (NfaTable<T, S>, S, S) {
     (self.states, self.head, self.tail)
+  }
+}
+
+impl<T: Hash + Clone + Eq, S: Hash + Clone + Ord> Nfa<T, S> {
+  #[inline]
+  pub fn build_dfa(self) -> Dfa<T, BTreeSet<S>> { self.into() }
+}
+
+impl<T: Hash + Eq + Debug, S: Hash + Eq + Debug> Nfa<T, S> {
+  pub fn dot(&self) -> Result<String, fmt::Error> {
+    let mut s = String::new();
+
+    s.write_str("digraph{edge[arrowhead=normal,arrowtail=dot];")?;
+
+    for state in self.states.keys() {
+      write!(s, "{:?}", format!("{:?}", state))?;
+
+      if state == &self.tail {
+        s.write_str("[peripheries=2];")?;
+      } else {
+        s.write_str(";")?;
+      }
+    }
+
+    for (state, outs) in &self.states {
+      let state_str = format!("{:?}", state);
+
+      for (by, tos) in outs {
+        let by_str: Cow<str> = by
+          .as_ref()
+          .map_or("λ".into(), |b| format!("{:?}", b).into());
+
+        for to in tos {
+          write!(
+            s,
+            "{:?}->{:?}[label={:?}];",
+            state_str,
+            format!("{:?}", to),
+            by_str
+          )?;
+        }
+      }
+    }
+
+    s.write_str("}")?;
+
+    Ok(s)
   }
 }
 

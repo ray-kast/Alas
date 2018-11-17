@@ -17,6 +17,6 @@ fn builder() {
 
 #[test]
 fn nfa() {
-  // Just make sure it doesn't panic. (see comments on the builder tests)
+  // Just make sure it doesn't panic. (see comments on the builder test)
   let _ = gen_re_1().build_nfa().build();
 }
